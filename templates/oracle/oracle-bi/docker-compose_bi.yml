@@ -1,0 +1,30 @@
+version: '3.9'
+services:
+  bi:
+    #image: oracle/fmw-infrastructure:12.2.1.4
+    image: container-registry.oracle.com/middleware/biplatform:12.2.1.3
+    container_name: oracle-bi
+    restart: unless-stopped
+    networks: 
+      - infraNET
+    ports:
+      - 9500:9500
+      - 9502:9502
+    volumes:
+      - ./properties:/u01/oracle/properties
+      - /home/administrador/bi-domains:/u01/oracle/user_projects/domains
+    environment:
+    - ADMIN_USERNAME=${ADMIN_USERNAME:weblogic}
+    - ADMIN_PASSWORD=${ADMIN_PASSWORD:weblogic123}
+    - DB_HOST=${DB_HOST:oracle19ee}
+    - DB_PORT=${DB_PORT:1521}
+    - DB_SERVICE=${DB_SERVICE:ORCLPDB1}
+    - DB_USERNAME=${DB_USERNAME:sys}
+    - DB_PASSWORD=${DB_PASSWORD:oracle}
+    - SCHEMA_PREFIX=${SCHEMA_PREFIX:BIPREFIX01}
+    - SCHEMA_PASSWORD=${SCHEMA_PASSWORD:oracle}
+
+networks:
+  infraNET:
+    external: true
+   

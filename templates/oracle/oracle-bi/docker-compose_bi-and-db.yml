@@ -1,0 +1,81 @@
+version: '3.9'
+services:
+  bi:
+    #image: oracle/fmw-infrastructure:12.2.1.4
+    image: container-registry.oracle.com/middleware/biplatform:12.2.1.3
+    container_name: oracle-bi
+    restart: unless-stopped
+    networks: 
+      - infraNET
+    ports:
+      - 9500:9500
+      - 9502:9502
+    volumes:
+      - ./properties:/u01/oracle/properties
+      - /home/administrador/bi-domains:/u01/oracle/user_projects/domains
+    environment:
+    - ADMIN_USERNAME=${ADMIN_USERNAME:weblogic}
+    - ADMIN_PASSWORD=${ADMIN_PASSWORD:weblogic123}
+    - DB_HOST=${DB_HOST:oracle19ee}
+    - DB_PORT=${DB_PORT:1521}
+    - DB_SERVICE=${DB_SERVICE:ORCLPDB1}
+    - DB_USERNAME=${DB_USERNAME:sys}
+    - DB_PASSWORD=${DB_PASSWORD:oracle}
+    - SCHEMA_PREFIX=${SCHEMA_PREFIX:BIPREFIX01}
+    - SCHEMA_PASSWORD=${SCHEMA_PASSWORD:oracle}
+    depends_on:
+      database:
+        condition: service_healthy
+
+  database:
+    image: container-registry.oracle.com/database/enterprise:19.3.0.0
+    # shm_size: 8g   #Amount of Linux shared memory
+    container_name: ${DB_HOST:oracle19ee}
+    #restart: always
+    restart: unless-stopped
+        
+    environment:
+      - DB_DATABASE=ORADB
+      - ORACLE_SID=ORCLCDB
+      - ORACLE_PDB=${DB_SERVICE:ORCLPDB1}
+      - ORACLE_PWD=${DB_PASSWORD:oracle}
+      - INIT_PGA_SIZE=1536
+      - INIT_SGA_SIZE=1536
+ #     #- ORACLE_EDITION=<your_database_edition>
+      - ORACLE_CHARACTERSET=AL32UTF8
+ #     #ENABLE_ARCHIVELOG: true
+ #     ORACLE_ALLOW_REMOTE: true
+ #     ORACLE_ENABLE_XDB: true
+  
+    volumes:
+      - /home/administrador/oradata19300:/opt/oracle/oradata
+      - /home/administrador/oradata19300/base:/opt/oracle/admin/ORCLCDB
+     # - oracle-backup:/opt/oracle/backup
+      #sCRIPT INICIALIZACAO
+     # - "./db-startup-migration-scripts:/opt/oracle/scripts/startup"   #Optional: A volume with custom scripts to be run after database startup.
+     # - "./db-setup-migration-scripts:/docker-entrypoint-initdb.d/setup" #Optional: A volume with custom scripts to be run after database setup.
+
+#    healthcheck:
+#      test: ["CMD", "sqlplus", "-L", "sys/Oracle_123@//localhost:1521/ORCLCDB as sysdba", "@healthcheck.sql"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 5
+      
+ #     - /home/oracle/oradata:/opt/oracle/oradata # persistent oracle database data.
+
+ #   - "oracle-se2-data:/opt/oracle/oradata"
+      #The data volume to use for the database. Has to be writable by the Unix "oracle" (uid: 54321) user inside the container
+      #If omitted the database will not be persisted over container recreation.
+         
+     ##  +##/u01/app/oracle/product/12.1/db_1
+       
+    ports:
+      - 1521:1521   #ports: ["1521:1521"]
+     # - 8080:8080
+     # - 5500:5500
+    networks: 
+      - infraNET
+networks:
+  infraNET:
+    external: true
+   
